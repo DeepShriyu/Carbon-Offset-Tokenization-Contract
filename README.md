@@ -66,7 +66,8 @@ Our vision is to democratize access to high-quality carbon offsets while buildin
 
 ## Contract Address
 
-**Testnet Contract Address**: `ST2EV4JDJQKWQV13H0VVHG66ABCTR1P8YR596CHR6.carbon-offset-tokenization`
+**Testnet Contract Address**: `
+STGPBEW1DRVNA80A863AYGPGNJ91SYNBYKTZK0QB.carbon-offset-tokenization`
 **Mainnet Contract Address**: `[To be deployed after extensive testing and audit]`
 `
 **Mainnet Contract Address**: `[To be deployed after audit and regulatory compliance]`
