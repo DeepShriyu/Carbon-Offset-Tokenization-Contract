@@ -215,4 +215,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 *"The best time to plant a tree was 20 years ago. The second best time is now. The best time to tokenize carbon offsets is today."*
 
 Join the fight against climate change through transparent, verifiable, and accessible carbon offset tokenization. Every token retired is a step toward a sustainable future.# Carbon-Offset-Tokenization-Contract<img width="1416" alt="screenshot (5)" src="https://github.com/user-attachments/assets/966b46dc-1e4d-4a0b-abf0-cf5160404032" />
-
+// START
+Updated on 2025-10-19
+// END
