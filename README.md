@@ -1,221 +1,108 @@
-# Carbon Offset Tokenization
+# CarbonOffsetTokenization.sol
 
-## Project Description
+## Overview
 
-The Carbon Offset Tokenization platform is a groundbreaking blockchain-based solution built on the Stacks network using Clarity smart contracts. This platform revolutionizes the carbon offset market by tokenizing verified carbon reduction projects, making environmental impact investments transparent, accessible, and immutable.
+`CarbonOffsetTokenization` is a simple ERC20‑like smart contract for issuing and retiring tokenized carbon offsets on Ethereum‑compatible blockchains.[1][2]
+Each token represents one unit of verified carbon offset (for example, one tonne of CO₂e), and retiring a token permanently removes it from circulation to reflect an actual offset claim.[3][1]
 
-The system enables verified environmental organizations to register carbon offset projects (such as reforestation, renewable energy, or carbon capture initiatives) and mint fungible tokens representing quantified CO2 reduction. Users can purchase these tokens to offset their carbon footprint, with each token representing one micro-tonne of CO2 equivalent removed or prevented from entering the atmosphere.
+This contract is **not** a full compliance solution. Real deployments must integrate with off‑chain registries, MRV processes, and legal frameworks for carbon markets.[4][2]
 
-Upon purchase, tokens are immediately retired (burned), ensuring that each carbon credit can only be used once and preventing double-counting. All transactions are permanently recorded on the blockchain, providing complete transparency and traceability for carbon offset claims.
+***
 
-## Project Vision
+## Key Features
 
-Our vision is to democratize access to high-quality carbon offsets while building the most transparent and trustworthy carbon credit marketplace in the world. We aim to:
+- **Fungible carbon offset token**
+  - ERC20‑like interface (`transfer`, `transferFrom`, `approve`, `allowance`, `balanceOf`, `totalSupply`).  
+  - `name = "Carbon Offset Token"`, `symbol = "COFF"`, `decimals = 18`.
 
-- **Climate Action Acceleration**: Make carbon offsetting accessible to individuals and businesses of all sizes
-- **Transparency Revolution**: Eliminate greenwashing through immutable, verifiable carbon offset records  
-- **Global Impact Scaling**: Connect verified environmental projects worldwide with conscious consumers and businesses
-- **Market Standardization**: Create unified standards for carbon credit verification and trading
-- **Environmental Justice**: Ensure local communities benefit from carbon offset projects in their regions
-- **Corporate Accountability**: Enable businesses to make verifiable climate commitments with transparent reporting
-- **Individual Empowerment**: Allow every person to take measurable climate action regardless of location or income level
+- **Controlled issuance (minting)**
+  - `mint(address to, uint256 amount, string projectRef)`  
+  - Only authorized **minters** (e.g., registries/verifiers) can mint new tokens after verifying underlying carbon credits.[5][6]
+  - `projectRef` can store a reference to an off‑chain certificate or registry entry (standard ID, URL, or IPFS hash).
 
-## Future Scope
+- **Offset / retirement (burn)**
+  - `retire(uint256 amount, string retireeId, string projectRef)`  
+  - Burns tokens from caller balance, increasing `totalRetired` while decreasing `totalSupply` to prevent reuse or resale.[1][3]
+  - Stores a detailed `Retirement` record for each retire action:
+    - `amount`
+    - `retireeId` (e.g., company ID, account code)
+    - `projectRef` (which project/credit was used)
+    - `timestamp`
 
-### Phase 1 - Enhanced Verification & Quality
-- Integration with international carbon standards (VCS, Gold Standard, Climate Action Reserve)
-- Real-time project monitoring through IoT sensors and satellite data
-- Third-party auditor network for continuous verification
-- Detailed project impact reporting and metrics
-- Mobile app for easy carbon footprint calculation and offsetting
+- **Transparency and auditability**
+  - `getRetirementsOf(address)` returns all retirement records for an address, enabling public audit trails of who retired what, when, and for which project.[2][7]
+  - `totalRetired` tracks global retired supply.
 
-### Phase 2 - Advanced Trading Mechanisms
-- Secondary marketplace for carbon credit trading
-- Automated retirement based on user carbon footprint data
-- Subscription models for automatic monthly offsetting
-- Corporate bulk purchasing and retirement programs
-- Dynamic pricing based on project quality and demand
+- **Role‑based access control**
+  - `isMinter[address]` mapping with:
+    - `setMinter(address minter, bool approved)` for owner‑controlled minter management.  
+  - `owner` can be transferred via `transferOwnership(address)`.
 
-### Phase 3 - DeFi Integration & Innovation
-- Carbon credit staking and yield farming mechanisms
-- Fractional ownership of large-scale environmental projects
-- Carbon-backed stablecoins and financial instruments
-- Prediction markets for future carbon prices
-- Cross-chain compatibility for global accessibility
+***
 
-### Phase 4 - Ecosystem & Partnerships
-- Integration with renewable energy certificates (RECs)
-- Partnerships with airlines, e-commerce, and logistics companies
-- API integration for automatic offset calculation
-- Corporate ESG reporting and compliance automation
-- Government policy integration and tax incentives
+## Contract API (High Level)
 
-### Phase 5 - Advanced Environmental Impact
-- Biodiversity credit tokenization alongside carbon credits
-- Plastic offset and ocean cleanup project integration
-- Circular economy token systems for waste reduction
-- Water conservation and restoration project tokenization
-- Sustainable agriculture and regenerative farming credits
+### ERC20‑like
 
-### Phase 6 - Global Climate Infrastructure
-- National carbon credit registry integration
-- International carbon market interoperability
-- Climate finance mechanisms for developing nations
-- Carbon border adjustment mechanism (CBAM) compliance
-- Integration with national net-zero commitments and policies
+- `function totalSupply() external view returns (uint256);`  
+- `function balanceOf(address account) external view returns (uint256);`  
+- `function transfer(address to, uint256 value) external returns (bool);`  
+- `function approve(address spender, uint256 value) external returns (bool);`  
+- `function allowance(address owner, address spender) external view returns (uint256);`  
+- `function transferFrom(address from, address to, uint256 value) external returns (bool);`
 
-## Contract Address
+### Carbon‑specific
 
-**Testnet Contract Address**: `
-STGPBEW1DRVNA80A863AYGPGNJ91SYNBYKTZK0QB.carbon-offset-tokenization`
-**Mainnet Contract Address**: `[To be deployed after extensive testing and audit]`
-`
-**Mainnet Contract Address**: `[To be deployed after audit and regulatory compliance]`
+- `function mint(address to, uint256 amount, string calldata projectRef) external onlyMinter;`  
+- `function retire(uint256 amount, string calldata retireeId, string calldata projectRef) external;`  
+- `function getRetirementsOf(address account) external view returns (Retirement[] memory);`  
+- `function totalRetired() external view returns (uint256);`
 
-### Contract Functions
+### Administration
 
-#### Public Functions:
-- `register-carbon-project(name, location, project-type, verified-by, total-credits, price-per-credit)` - Register verified carbon offset projects (owner only)
-- `purchase-carbon-credits(project-id, credit-amount)` - Purchase and retire carbon offset credits
+- `function setMinter(address minter, bool approved) external onlyOwner;`  
+- `function transferOwnership(address newOwner) external onlyOwner;`
 
-#### Read-Only Functions:
-- `get-project-details(project-id)` - Get comprehensive project information
-- `get-user-retired-credits(user)` - Get total carbon credits retired by a user
-- `get-user-project-purchases(project-id, user)` - Get user's purchases from specific project
-- `get-platform-stats()` - Get overall platform statistics and impact metrics
-- `get-token-info()` - Get carbon offset token information
-- `is-project-active(project-id)` - Check if project has available credits
+***
 
-### Deployment Instructions
+## Example Flows
 
-1. **Prerequisites**: 
-   ```bash
-   npm install -g @hirosystems/clarinet-cli
-   ```
+### 1. Issuing new carbon credits
 
-2. **Setup Project**:
-   ```bash
-   git clone <repository-url>
-   cd carbon-offset-tokenization
-   clarinet check
-   ```
+1. Verifier/registry checks an off‑chain project and credits (per its own process).[8][6]
+2. Owner calls `setMinter(verifier, true)`.  
+3. Verifier calls `mint(beneficiary, amount, projectRef)`.  
+4. Beneficiary receives fungible COFF tokens that can be held or transferred.
 
-3. **Deploy to Testnet**:
-   ```bash
-   clarinet deployments apply --devnet
-   ```
+### 2. Offsetting emissions (retiring tokens)
 
-4. **Test Functions**:
-   ```bash
-   clarinet console
-   ```
+1. Corporate/user accumulates COFF tokens.  
+2. Calls `retire(amount, retireeId, projectRef)` from their address.  
+3. Tokens are burned; `totalSupply` decreases and `totalRetired` increases.  
+4. A `Retired` event and a `Retirement` record are stored on‑chain for audit and reporting.[3][1]
 
-### Usage Examples
+***
 
-```clarity
-;; Register a reforestation project (owner only)
-(contract-call? .carbon-offset-tokenization register-carbon-project 
-  "Amazon Rainforest Restoration" 
-  "Brazil, Amazon Basin" 
-  "Reforestation" 
-  "Verified Carbon Standard" 
-  u10000000000 ;; 10,000 tonnes CO2
-  u50000000)   ;; 50 STX per tonne
+## Security & Integration Notes
 
-;; Purchase 1 tonne of carbon credits (1,000,000 micro-tonnes)
-(contract-call? .carbon-offset-tokenization purchase-carbon-credits u1 u1000000)
+- This contract **does not**:
+  - Verify that off‑chain credits exist or prevent double‑counting across external registries.  
+  - Implement KYC/AML or jurisdiction‑specific compliance.  
+- Recommended for production:
+  - Integrate with trusted carbon registries and MRV providers via oracles or backend systems.[9][6]
+  - Add pausing, upgradability, and role‑management modules as appropriate.  
+  - Undergo thorough auditing and legal review before real‑world use.[10][4]
 
-;; Check project details
-(contract-call? .carbon-offset-tokenization get-project-details u1)
+***
 
-;; Check your total retired credits
-(contract-call? .carbon-offset-tokenization get-user-retired-credits tx-sender)
-```
+## Development & Testing
 
-### Data Structures
-
-#### Carbon Project:
-- **Name**: Project identification (max 64 characters)
-- **Location**: Geographic location of environmental project
-- **Project Type**: Category (Reforestation, Solar, Wind, etc.)
-- **Verified By**: Certification body or standard
-- **Total Credits**: Total CO2 tonnes offset capacity
-- **Available Credits**: Remaining credits for purchase
-- **Price Per Credit**: Cost in microSTX per micro-tonne CO2
-- **Created At**: Project registration timestamp
-- **Is Active**: Project availability status
-
-#### Token Economics:
-- **1 Token = 1 Micro-tonne CO2**: Precise measurement unit
-- **Immediate Retirement**: Tokens burned upon purchase to prevent double-counting
-- **Transparent Supply**: All minting and burning operations recorded on-chain
-- **Price Discovery**: Market-driven pricing set by project developers
-
-### Verification Standards
-
-- **Only Verified Projects**: Contract owner acts as verification authority
-- **International Standards**: Compliance with VCS, Gold Standard, and other recognized standards
-- **Continuous Monitoring**: Future integration with real-time project monitoring
-- **Third-Party Audits**: Regular verification of project claims and impact
-
-### Environmental Impact Tracking
-
-- **Individual Impact**: Track personal carbon offset contributions
-- **Corporate Reporting**: Transparent ESG reporting for businesses
-- **Project Performance**: Monitor actual vs. projected environmental impact
-- **Global Statistics**: Aggregate platform impact on climate change
-
-### Security & Compliance
-
-- **Smart Contract Audit**: Professional security review before mainnet deployment
-- **Verification Process**: Multi-layer project verification system
-- **Fraud Prevention**: Immutable records prevent double-counting and fraud
-- **Regulatory Compliance**: Adherence to emerging carbon market regulations
-
-### Carbon Credit Quality Assurance
-
-- **Additionality**: Projects must demonstrate additional environmental benefit
-- **Permanence**: Long-term carbon storage and impact verification
-- **Measurability**: Quantifiable and verifiable CO2 reduction
-- **No Double Counting**: Blockchain prevents multiple claims on same credits
-
-### API & Integrations
-
-Future development will include:
-- RESTful API for third-party integrations
-- Webhook support for real-time notifications
-- Carbon footprint calculator integration
-- E-commerce platform plugins
-- Corporate sustainability reporting tools
-
-### Contributing
-
-We welcome contributions from environmental scientists, blockchain developers, and climate advocates! Please review our contribution guidelines and submit issues, feature requests, or pull requests.
-
-### Community & Partnerships
-
-- **Environmental Organizations**: Partner with verified project developers
-- **Corporate Partners**: Work with businesses for bulk offset programs
-- **Academic Institutions**: Collaborate on carbon measurement and verification research
-- **Government Agencies**: Support policy development and compliance
-
-### Legal & Regulatory
-
-- **Compliance Framework**: Adherence to emerging carbon market regulations
-- **International Standards**: Recognition by major carbon credit standards
-- **Tax Implications**: Guidance on tax treatment of carbon offset purchases
-- **Corporate Reporting**: Support for mandatory climate disclosure requirements
-
-### License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-*"The best time to plant a tree was 20 years ago. The second best time is now. The best time to tokenize carbon offsets is today."*
-
-Join the fight against climate change through transparent, verifiable, and accessible carbon offset tokenization. Every token retired is a step toward a sustainable future.# Carbon-Offset-Tokenization-Contract<img width="1416" alt="screenshot (5)" src="https://github.com/user-attachments/assets/966b46dc-1e4d-4a0b-abf0-cf5160404032" />
-END
-// 
-End
-// 
+- Solidity version: `^0.8.19` or compatible.  
+- Typical toolchains:
+  - Hardhat or Foundry for compilation and testing.  
+  - Scripts to:
+    - Deploy the contract.
+    - Configure minters.
+    - Mint sample tokens and simulate retirements with different `projectRef` values.
+Contract Adress 0x2b9C91f10a87c161ea845E4E78F8d6ffd067519B
+<img width="1919" height="928" alt="image (1)" src="https://github.com/user-attachments/assets/37653ace-0246-4f6d-89c1-359f4d2e4a04" />
